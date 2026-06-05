@@ -1,5 +1,5 @@
 // src/libs/api/appointment.ts
-import api from "./axiosInstance"; // ✅ use the configured instance, not raw axios
+import api from "./axiosInstance"; //use the configured instance, not raw axios
 import { AxiosError } from "axios";
 
 /* ================= TYPES ================= */
@@ -179,22 +179,46 @@ export async function getMyPets() {
 }
 
 /* ================= USER APPOINTMENTS ================= */
-
 export async function getAppointments(status?: string): Promise<Appointment[]> {
   try {
+    // Get token from localStorage
+    const token = localStorage.getItem("token");
+    
+    if (!token) {
+      throw new Error("No authentication token found. Please login again.");
+    }
+    
+    console.log("Fetching appointments with token:", token.substring(0, 20) + "...");
+    
     const res = await api.get<{
       status: string;
       count: number;
       appointments: Appointment[];
-    }>("/appointment/users", {          // ✅ relative path only
+    }>("/appointment/users", {
       params: status ? { status } : undefined,
-    });                                 // ✅ no manual token — axiosInstance handles it
-
+    });
+    
+    console.log("Appointments response:", res.data);
     return res.data.appointments;
   } catch (err: unknown) {
+    console.error("Full error in getAppointments:", err);
+    
     let msg = "Failed to fetch appointments";
     if (err instanceof AxiosError) {
-      msg = err.response?.data?.message ?? msg;
+      // Log the full error for debugging
+      console.error("Response status:", err.response?.status);
+      console.error("Response data:", err.response?.data);
+      console.error("Request URL:", err.config?.url);
+      
+      if (err.response?.status === 401) {
+        msg = "Session expired. Please login again.";
+        // Optionally redirect to login
+        // window.location.href = '/login';
+      } else if (err.response?.status === 403) {
+        msg = "You don't have permission to view appointments. Are you logged in as an owner?";
+      } else {
+        msg = err.response?.data?.message ?? msg;
+      }
     }
     throw new Error(msg);
   }

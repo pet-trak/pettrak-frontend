@@ -1,10 +1,10 @@
 // src/app/(owner)/dashboard/appointments/getAppointment.tsx
 
-
 'use client';
 
 import { useEffect, useState } from "react";
 import { getAppointments } from "@/libs/api/appointment";
+import { useAuthStore } from "@/store/auth";
 import { toast } from "sonner";
 import dayjs from "dayjs";
 import {
@@ -27,6 +27,7 @@ const STATUS_STYLES: Record<string, { dot: string; badge: string }> = {
 };
 
 export default function UserAppointmentsPage() {
+  const { profile } = useAuthStore();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [filteredAppointments, setFilteredAppointments] = useState<Appointment[]>([]);
   const [activeTab, setActiveTab] = useState<typeof VIEW_TABS[number]>("overview");
@@ -35,17 +36,32 @@ export default function UserAppointmentsPage() {
 
   useEffect(() => {
     async function load() {
+      // Check if user is authenticated and is an owner
+      if (!profile) {
+        toast.error("Please login to view your appointments");
+        setLoading(false);
+        return;
+      }
+      
+      if (profile.type !== 'owner') {
+        toast.error("Only pet owners can view appointments");
+        setLoading(false);
+        return;
+      }
+      
       try {
         const data = await getAppointments();
         setAppointments(data);
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "An error occurred");
+        console.error("Failed to load appointments:", err);
+        toast.error(err instanceof Error ? err.message : "An error occurred while loading appointments");
       } finally {
         setLoading(false);
       }
     }
+    
     load();
-  }, []);
+  }, [profile]);
 
   useEffect(() => {
     const now = dayjs();
@@ -60,15 +76,19 @@ export default function UserAppointmentsPage() {
     }
   }, [activeTab, appointments]);
 
-  const getStatusGradient = (status: string) => {
-    switch (status) {
-      case "pending": return "from-yellow-400 to-yellow-500";
-      case "confirmed": return "from-blue-400 to-blue-500";
-      case "completed": return "from-green-400 to-green-500";
-      case "cancelled": return "from-red-400 to-red-500";
-      default: return "from-gray-400 to-gray-500";
-    }
-  };
+  // Show nothing while checking (will show loading or error state)
+  // If no profile or not owner, show access restricted message
+  if (!profile || profile.type !== 'owner') {
+    return (
+      <main className="p-4 sm:p-6 max-w-full mx-auto sec-ff">
+        <div className="flex flex-col items-center py-16 bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <User className="w-12 h-12 text-gray-200 mb-3" />
+          <p className="text-gray-400 font-semibold sec-ff text-sm">Access Restricted</p>
+          <p className="text-gray-300 text-xs mt-1 pry-ff">Please login as a pet owner to view appointments.</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="p-4 sm:p-6 max-w-full mx-auto sec-ff">
@@ -94,7 +114,6 @@ export default function UserAppointmentsPage() {
           </button>
         ))}
       </div>
-
 
       {/* Loading */}
       {loading && (
@@ -171,41 +190,40 @@ export default function UserAppointmentsPage() {
                       </span>
 
                       {/* Actions */}
-{/* Actions */}
-<div className="relative flex items-center gap-1.5">
-  <button
-    className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-colors"
-    onClick={(e) => {
-      e.preventDefault();
-      setOpenDropdown(openDropdown === a._id ? null : a._id);
-    }}
-  >
-    <MoreVertical className="w-4 h-4 text-gray-500" />
-  </button>
+                      <div className="relative flex items-center gap-1.5">
+                        <button
+                          className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-colors"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setOpenDropdown(openDropdown === a._id ? null : a._id);
+                          }}
+                        >
+                          <MoreVertical className="w-4 h-4 text-gray-500" />
+                        </button>
 
-  {openDropdown === a._id && (
-    <>
-      {/* backdrop to close on outside click */}
-      <div
-        className="fixed inset-0 z-10"
-        onClick={() => setOpenDropdown(null)}
-      />
-      <div className="absolute right-0 top-9 z-20 bg-white border border-gray-100 rounded-xl shadow-lg w-36 py-1 overflow-hidden">
-        <button
-          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors sec-ff"
-          onClick={(e) => {
-            e.preventDefault();
-            setOpenDropdown(null);
-            toast.error('Delete coming soon!');
-          }}
-        >
-          <Trash2 className="w-4 h-4" />
-          Delete
-        </button>
-      </div>
-    </>
-  )}
-</div>
+                        {openDropdown === a._id && (
+                          <>
+                            {/* backdrop to close on outside click */}
+                            <div
+                              className="fixed inset-0 z-10"
+                              onClick={() => setOpenDropdown(null)}
+                            />
+                            <div className="absolute right-0 top-9 z-20 bg-white border border-gray-100 rounded-xl shadow-lg w-36 py-1 overflow-hidden">
+                              <button
+                                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors sec-ff"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setOpenDropdown(null);
+                                  toast.error('Delete coming soon!');
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Delete
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </Link>
                 );

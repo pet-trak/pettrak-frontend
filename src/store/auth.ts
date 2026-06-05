@@ -5,7 +5,7 @@ import { persist } from 'zustand/middleware';
 /* =========================
    Roles
 ========================= */
-export type UserRole = 'owner' | 'clinic' | 'vet';
+export type UserRole = 'owner' | 'clinic' | 'vet' | 'receptionist';
 
 /* ---- Pet (Owner only) ---- */
 export interface Pet {
@@ -40,6 +40,7 @@ export interface OwnerProfile {
   address?: Address;
   pets?: Pet[];
   type: 'owner';
+  pushNotificationToken?: boolean;
 }
 
 export type PricingItem = {
@@ -72,8 +73,18 @@ export interface VetProfile {
   type: 'vet';
 }
 
+/* ---- Receptionist Profile ---- */
+export interface ReceptionistProfile {
+  id: string;
+  fullname: string | null;
+  email: string | null;
+  phone?: string;
+  clinicId?: string;
+  type: 'receptionist';
+}
+
 /* ---- Union Profile ---- */
-export type Profile = OwnerProfile | ClinicProfile | VetProfile;
+export type Profile = OwnerProfile | ClinicProfile | VetProfile | ReceptionistProfile;
 
 /* =========================
    STORE

@@ -1,5 +1,5 @@
 @import "tailwindcss";
-
+@import "react-international-phone/style.css";
 
 
 html,
@@ -9,11 +9,17 @@ body {
   background-color: var(--pry-clr);
 }
 
+@theme inline {
+  --color-acc-clr: var(--acc-clr);
+  --color-pry-clr: var(--pry-clr);
+  --color-sec-clr: var(--sec-clr);
+  --color-bg-clr: var(--bg-clr);
+}
 
 :root {
   --pry-clr: #FFFFFF;
   --bg-clr: #D7F9E5;
-  --acc-clr: #38E07B;
+  --acc-clr: #22c55e;
   --sec-clr: #333333;
 
   --pry-ff: 'Product Sans', sans-serif;

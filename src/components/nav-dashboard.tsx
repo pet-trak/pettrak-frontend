@@ -5,9 +5,8 @@ import { useAuthStore, OwnerProfile, Pet } from '@/store/auth';
 import { getUserProfile } from '@/libs/api/user';
 import { toast } from 'sonner';
 import Image from 'next/image';
-import Spinner from './ui/spinner';
 import Link from 'next/link';
-import { Search, Bell, ChevronDown, LogOut, User } from 'lucide-react';
+import { Search, Bell, ChevronDown, LogOut, User, Loader2 } from 'lucide-react';
 
 export default function NavDashboard() {
     const { profile, setProfile, logout } = useAuthStore();
@@ -78,7 +77,7 @@ export default function NavDashboard() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search patients, owners, or records..."
-                        className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-(--acc-clr)/30 focus:border-(--acc-clr) focus:bg-white transition-all duration-150 sec-ff"
+                        className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-acc-clr/30 focus:border-acc-clr focus:bg-white transition-all duration-150 sec-ff"
                     />
                 </div>
 
@@ -92,7 +91,7 @@ export default function NavDashboard() {
                         aria-label="Notifications"
                     >
                         <Bell className="w-5 h-5 text-gray-500 group-hover:text-gray-700 transition-colors" strokeWidth={1.8} />
-                        <span className="absolute top-2 right-2 w-2 h-2 bg-(--acc-clr) rounded-full ring-2 ring-white" />
+                        <span className="absolute top-2 right-2 w-2 h-2 bg-acc-clr rounded-full ring-2 ring-white" />
                     </Link>
 
                     {/* Divider */}
@@ -100,7 +99,7 @@ export default function NavDashboard() {
 
                     {loading && (
                         <div className="w-10 h-10 flex items-center justify-center">
-                            <Spinner />
+                            <Loader2 className="w-5 h-5 text-gray-500 animate-spin" />
                         </div>
                     )}
 

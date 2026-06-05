@@ -1,6 +1,6 @@
 import axios, { AxiosError } from "axios";
 
-export type UserRole = "owner" | "clinic" | "vet";
+export type UserRole = "owner" | "clinic" | "vet" | "receptionist";
 
 interface LoginPayload {
   email: string;
@@ -34,15 +34,10 @@ interface RegisterClinicPayload {
 }
 
 interface LoginResponse {
-  user: {
-    id: string;
-    fullname?: string;
-    clinicName?: string;
-    email: string;
-    role: UserRole;
-    pets?: { _id: string }[];
-  };
+  success: boolean;
+  message: string;
   token: string;
+  role: UserRole;
 }
 
 interface BasicResponse {

@@ -3,21 +3,29 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { toast, Toaster } from 'sonner';
-import { Eye, EyeOff } from 'lucide-react';
-import Spinner from '@/components/ui/spinner';
+import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
 import { login, UserRole } from '@/libs/api/auth';
 import { useAuthStore, Profile, OwnerProfile, ClinicProfile, VetProfile } from '@/store/auth';
 
+function decodeToken(token: string): Record<string, unknown> {
+  try {
+    return JSON.parse(atob(token.split('.')[1]));
+  } catch {
+    return {};
+  }
+}
+
 export default function LoginComp() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail]               = useState('');
+  const [password, setPassword]         = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const router = useRouter();
-  const setProfile = useAuthStore((state) => state.setProfile);
+  const [remember, setRemember]         = useState(false);
+  const [loading, setLoading]           = useState(false);
+  const [error, setError]               = useState('');
+
+  const router     = useRouter();
+  const setProfile = useAuthStore((s) => s.setProfile);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,48 +52,36 @@ export default function LoginComp() {
     }
 
     try {
+      const decoded = decodeToken(data.token);
+      const userId  = (decoded.userId as string) ?? '';
       let profile: Profile;
 
-      if (data.user.role === 'owner') {
+      if (data.role === 'owner') {
         const ownerProfile: OwnerProfile = {
-          id: data.user.id,
-          fullname: data.user.fullname ?? null,
-          email: data.user.email,
-          phoneNumber: '',
+          id: userId, fullname: null, email, phoneNumber: '',
           address: { country: null, city: null, street: null, zipCode: null },
-          pets: [],
-          type: 'owner',
+          pets: [], type: 'owner',
         };
         profile = ownerProfile;
-      } else if (data.user.role === 'clinic') {
+      } else if (data.role === 'clinic') {
         const clinicProfile: ClinicProfile = {
-          id: data.user.id,
-          clinicName: data.user.clinicName ?? null,
-          email: data.user.email,
-          phone: '',
+          id: userId, clinicName: null, email, phone: '',
           address: { country: null, city: null, street: null, state: null, zipCode: null },
-          vets: [],
-          servicesProvided: [],
-          pricing: [],
-          type: 'clinic',
+          vets: [], servicesProvided: [], pricing: [], type: 'clinic',
         };
         profile = clinicProfile;
       } else {
         const vetProfile: VetProfile = {
-          id: data.user.id,
-          fullname: data.user.fullname ?? null,
-          email: data.user.email,
-          phone: '',
-          clinicId: '',
-          type: 'vet',
+          id: userId, fullname: null, email, phone: '', clinicId: '', type: 'vet',
         };
         profile = vetProfile;
       }
 
       setProfile(profile, data.token);
-      localStorage.setItem('role', data.user.role);
+      localStorage.setItem('role', data.role);
+      if (remember) localStorage.setItem('remember', '1');
 
-      toast.success(`Logged in as ${data.user.role}!`);
+      toast.success(`Logged in as ${data.role}!`);
       router.push('/role-gate');
     } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);
@@ -100,73 +96,116 @@ export default function LoginComp() {
     <>
       <Toaster position="top-center" />
 
-      <main className="flex flex-col sm:flex-row items-stretch justify-center min-h-screen p-4 sm:p-10 pry-ff shadow rounded-2xl">
-        {/* Left side */}
-        <section className="hidden sm:flex w-[400px] bg-(--acc-clr) text-(--pry-clr) p-10 rounded-l-2xl flex-col gap-4">
-          <div
-            onClick={() => router.push('/')}
-            className="flex items-start justify-start cursor-pointer">
-            <Image
-              src="/official_logo_remove.png"
-              alt="PetTrak Logo"
-              width={200}
-              height={200}
-              className="h-10 w-auto object-contain"
-            />
-          </div>
-          <p className="text-3xl font-medium">Welcome back!</p>
-          <p>Manage your pet&apos;s health and happiness, all in one place.</p>
-        </section>
+      <main className="min-h-screen flex items-center justify-center pry-ff" style={{ backgroundColor: 'var(--bg-clr)' }}>
+        <div className="w-full max-w-[400px] bg--pry-clr rounded-2xl shadow-lg p-8 mx-4">
 
-        {/* Right side */}
-        <section className="flex-1 p-10 rounded-2xl sm:rounded-l-none sm:rounded-r-2xl flex flex-col justify-center bg-white max-w-md w-full">
-          <h1 className="text-3xl font-semibold mb-6 text-center">Login to your Account</h1>
-          <p className="text-gray-600 mb-6 text-center">Please enter your credentials to access your dashboard.</p>
+          {/* Heading */}
+          <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--sec-clr)' }}>
+            Login to your Account
+          </h1>
+          <p className="text-sm mb-8" style={{ color: 'var(--sec-clr)', opacity: 0.6 }}>
+            Please enter your credentials to continue
+          </p>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="p-2 border border-gray-300 rounded-md bg-gray-100"
-            />
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
 
-            <div className="relative">
+            {/* Email */}
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="email" className="flex items-center gap-1.5 text-xs font-medium" style={{ color: 'var(--sec-clr)' }}>
+                <Mail size={13} />
+                Email Address
+              </label>
               <input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                id="email"
+                type="email"
+                placeholder="name@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full p-2 pr-10 border border-gray-300 rounded-md bg-gray-100"
+                className="w-full px-4 py-3 rounded-lg text-sm border border-gray-200 bg-gray-50 focus:outline-none transition-all"
+                onFocus={(e) => (e.target.style.borderColor = 'var(--acc-clr)')}
+                onBlur={(e)  => (e.target.style.borderColor = '#e5e7eb')}
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
             </div>
 
-            {error && <p className="text-red-600 text-sm text-center">{error}</p>}
+            {/* Password */}
+            <div className="flex flex-col gap-1.5">
+              <div className="flex justify-between items-center">
+                <label htmlFor="password" className="flex items-center gap-1.5 text-xs font-medium" style={{ color: 'var(--sec-clr)' }}>
+                  <Lock size={13} />
+                  Password
+                </label>
+                <button type="button" className="text-xs font-semibold hover:underline" style={{ color: 'var(--acc-clr)' }}>
+                  Forgot password?
+                </button>
+              </div>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 pr-10 rounded-lg text-sm border border-gray-200 bg-gray-50 focus:outline-none transition-all"
+                  onFocus={(e) => (e.target.style.borderColor = 'var(--acc-clr)')}
+                  onBlur={(e)  => (e.target.style.borderColor = '#e5e7eb')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((p) => !p)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
 
+            {/* Remember me */}
+            <div className="flex items-center gap-2">
+              <input
+                id="remember"
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+                className="w-4 h-4 rounded cursor-pointer"
+                style={{ accentColor: 'var(--acc-clr)' }}
+              />
+              <label htmlFor="remember" className="text-sm cursor-pointer" style={{ color: 'var(--sec-clr)', opacity: 0.7 }}>
+                Remember me for 30 days
+              </label>
+            </div>
+
+            {/* Error */}
+            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="bg-(--acc-clr) text-white py-2 rounded-md hover:bg-(--acc-clr)/80 disabled:opacity-50 flex items-center justify-center"
+              className="group w-full py-3 rounded-lg text-(-pry-clr) font-semibold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50"
+              style={{ backgroundColor: 'var(--acc-clr)' }}
+              onMouseEnter={(e) => (e.currentTarget.style.filter = 'brightness(1.1)')}
+              onMouseLeave={(e) => (e.currentTarget.style.filter = 'brightness(1)')}
             >
-              {loading ? <Spinner /> : 'Login'}
+              {loading ? <Loader2 className="animate-spin text-(-pry-clr)" /> : (
+                <>
+                  Login
+                  <ArrowRight size={16} className="transition-transform duration-200 group-hover:translate-x-1" />
+                </>
+              )}
             </button>
 
-            <div className="flex items-center justify-center max-w-md w-full gap-2 text-sm mt-2">
-              <span className="text-(--sec-clr)">Don&apos;t have an account?</span>
-              <Link href="/signup" className="text-(--acc-clr)">Sign up for free</Link>
-            </div>
+            {/* Sign up */}
+            <p className="text-sm text-center mt-1" style={{ color: 'var(--sec-clr)', opacity: 0.7 }}>
+              Don&apos;t have an account?{' '}
+              <Link href="/signup" className="font-semibold hover:underline underline-offset-4" style={{ color: 'var(--acc-clr)', opacity: 1 }}>
+                Sign up for free
+              </Link>
+            </p>
+
           </form>
-        </section>
+        </div>
       </main>
     </>
   );

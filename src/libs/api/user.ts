@@ -1,6 +1,6 @@
 import { AxiosError } from "axios";
 import api from "./axiosInstance";
-import type { OwnerProfile, Pet, Address } from "@/store/auth"; // ✅ import from store
+import type { OwnerProfile, Pet, Address } from "@/store/auth"; // import from store
 
 export type { OwnerProfile, Pet, Address }; // re-export so existing imports don't break
 
@@ -47,14 +47,14 @@ function mapUser(user: RawUser): OwnerProfile {
       street: user.address?.street ?? user.street ?? "",
       zipCode: user.address?.zipCode ?? user.zipCode ?? "",
     },
-    pets: (user.pets ?? []).map(mapPet), // ✅ _id → id
+    pets: (user.pets ?? []).map(mapPet), // _id → id
     type: "owner",
   };
 }
 
 export async function getUserProfile(): Promise<OwnerProfile> {
   try {
-    const res = await api.get<{ data: { user: RawUser } }>("/user/profile");
+    const res = await api.get<{ data: { user: RawUser } }>("/auth/owner/me");
     return mapUser(res.data.data.user);
   } catch (err: unknown) {
     let msg = "Failed to fetch profile";
@@ -72,7 +72,7 @@ export async function updateProfile(profileData: {
 }): Promise<OwnerProfile> {
   try {
     const res = await api.patch<{ data: { user: RawUser } }>(
-      "/user/profile",
+      "/owner/update-profile",
       profileData
     );
     return mapUser(res.data.data.user);

@@ -6,27 +6,23 @@ import { getUserProfile } from '@/libs/api/user';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Search, Bell, ChevronDown, LogOut, User, Loader2 } from 'lucide-react';
+import { Search, ChevronDown, LogOut, User, Loader2 } from 'lucide-react';
 
 export default function NavDashboard() {
     const { profile, setProfile, logout } = useAuthStore();
-    const [loading, setLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [menuOpen, setMenuOpen] = useState(false);
+    const [loading, setLoading]           = useState(true);
+    const [searchQuery, setSearchQuery]   = useState('');
+    const [menuOpen, setMenuOpen]         = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const loadProfile = async () => {
             const token = localStorage.getItem('token');
-            if (!token) {
-                setLoading(false);
-                return;
-            }
+            if (!token) { setLoading(false); return; }
+            if (profile) { setLoading(false); return; }
 
             try {
                 const fetched = await getUserProfile();
-                // getUserProfile already returns a normalized OwnerProfile-shaped object
-                // Cast it to the store's OwnerProfile type
                 const ownerProfile: OwnerProfile = {
                     id: fetched.id,
                     fullname: fetched.fullname ?? 'Unknown',
@@ -46,7 +42,7 @@ export default function NavDashboard() {
         };
 
         loadProfile();
-    }, [setProfile, logout]);
+    }, [profile, setProfile, logout]);
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -58,12 +54,10 @@ export default function NavDashboard() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Guard: only render for owner profiles
-    if (!profile || profile.type !== 'owner') return null;
+    if (!loading && (!profile || profile.type !== 'owner')) return null;
 
-    // Safe cast — we've confirmed type === 'owner' above
     const ownerProfile = profile as OwnerProfile;
-    const petCount = ownerProfile.pets?.length ?? 0;
+    const petCount     = ownerProfile?.pets?.length ?? 0;
 
     return (
         <nav className="sticky top-0 z-30 bg-white border-b border-gray-100 shadow-sm">
@@ -76,65 +70,58 @@ export default function NavDashboard() {
                         type="search"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search patients, owners, or records..."
-                        className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-acc-clr/30 focus:border-acc-clr focus:bg-white transition-all duration-150 sec-ff"
+                        placeholder="Search pets, records..."
+                        className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-acc-clr focus:bg-white transition-all duration-150 sec-ff"
                     />
                 </div>
 
                 {/* Right actions */}
                 <div className="flex items-center gap-2">
 
-                    {/* Notification Bell */}
-                    <Link
-                        href="/clinic-dashboard/notifications"
-                        className="relative w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors duration-150 group"
-                        aria-label="Notifications"
-                    >
-                        <Bell className="w-5 h-5 text-gray-500 group-hover:text-gray-700 transition-colors" strokeWidth={1.8} />
-                        <span className="absolute top-2 right-2 w-2 h-2 bg-acc-clr rounded-full ring-2 ring-white" />
-                    </Link>
-
                     {/* Divider */}
                     <div className="w-px h-6 bg-gray-200 mx-1" />
 
+                    {/* Spinner while loading */}
                     {loading && (
                         <div className="w-10 h-10 flex items-center justify-center">
                             <Loader2 className="w-5 h-5 text-gray-500 animate-spin" />
                         </div>
                     )}
 
-                    {/* Owner profile dropdown */}
-                    {!loading && (
+                    {/* Profile dropdown */}
+                    {!loading && ownerProfile && (
                         <div className="relative" ref={menuRef}>
                             <button
                                 onClick={() => setMenuOpen(!menuOpen)}
                                 className="flex items-center gap-2.5 pl-1 pr-3 py-1.5 rounded-xl hover:bg-gray-100 transition-colors duration-150 group"
                             >
-                                {/* Pet avatars stack */}
+                                {/* Pet avatars or fallback */}
                                 <div className="flex -space-x-2 flex-shrink-0">
-                                    {ownerProfile.pets?.slice(0, 3).map((pet: Pet, i: number) => (
-                                        <div
-                                            key={pet.id}
-                                            className="w-8 h-8 rounded-full border-2 border-white shadow-sm overflow-hidden"
-                                            style={{ zIndex: (ownerProfile.pets?.length ?? 0) - i }}
-                                        >
-                                            <Image
-                                                src={pet.photo ?? '/default-pet.png'}
-                                                alt={pet.name ?? 'Pet'}
-                                                width={32}
-                                                height={32}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        </div>
-                                    ))}
-                                    {petCount === 0 && (
-                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#38E07B] to-[#2bc466] flex items-center justify-center border-2 border-white shadow-sm">
-                                            <User className="w-4 h-4 text-white" />
-                                        </div>
-                                    )}
+                                    {petCount > 0
+                                        ? ownerProfile.pets?.slice(0, 3).map((pet: Pet, i: number) => (
+                                            <div
+                                                key={pet.id}
+                                                className="w-8 h-8 rounded-full border-2 border-white shadow-sm overflow-hidden"
+                                                style={{ zIndex: petCount - i }}
+                                            >
+                                                <Image
+                                                    src={pet.photo ?? '/default-pet.png'}
+                                                    alt={pet.name ?? 'Pet'}
+                                                    width={32}
+                                                    height={32}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                        ))
+                                        : (
+                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#38E07B] to-[#2bc466] flex items-center justify-center border-2 border-white shadow-sm">
+                                                <User className="w-4 h-4 text-white" />
+                                            </div>
+                                        )
+                                    }
                                 </div>
 
-                                {/* Name */}
+                                {/* Name + pet count */}
                                 <div className="hidden sm:flex flex-col leading-tight">
                                     <span className="text-sm font-semibold text-gray-800 sec-ff truncate max-w-[120px]">
                                         {ownerProfile.fullname}
@@ -149,7 +136,7 @@ export default function NavDashboard() {
                                 />
                             </button>
 
-                            {/* Dropdown */}
+                            {/* Dropdown menu */}
                             {menuOpen && (
                                 <div
                                     onClick={(e) => e.stopPropagation()}
@@ -157,7 +144,9 @@ export default function NavDashboard() {
                                 >
                                     <div className="px-4 py-3 border-b border-gray-50">
                                         <p className="text-xs text-gray-400 pry-ff">Signed in as</p>
-                                        <p className="text-sm font-semibold text-gray-800 truncate sec-ff">{ownerProfile.fullname}</p>
+                                        <p className="text-sm font-semibold text-gray-800 truncate sec-ff">
+                                            {ownerProfile.fullname}
+                                        </p>
                                     </div>
 
                                     <div className="p-1.5">

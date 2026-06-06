@@ -54,8 +54,8 @@ function mapUser(user: RawUser): OwnerProfile {
 
 export async function getUserProfile(): Promise<OwnerProfile> {
   try {
-    const res = await api.get<{ data: { user: RawUser } }>("/auth/owner/me");
-    return mapUser(res.data.data.user);
+    const res = await api.get<{ success: boolean; user: RawUser }>("/auth/owner/me");
+    return mapUser(res.data.user);
   } catch (err: unknown) {
     let msg = "Failed to fetch profile";
     if (err instanceof AxiosError) {

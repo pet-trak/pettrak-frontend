@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast, Toaster } from 'sonner';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
-import { login, UserRole } from '@/libs/api/auth';
-import { useAuthStore, Profile, OwnerProfile, ClinicProfile, VetProfile } from '@/store/auth';
+import { login } from '@/libs/api/auth';
+import { useAuthStore, OwnerProfile } from '@/store/auth';
 
 function decodeToken(token: string): Record<string, unknown> {
   try {
@@ -32,60 +32,29 @@ export default function LoginComp() {
     setLoading(true);
     setError('');
 
-    const roles: UserRole[] = ['owner', 'clinic', 'vet'];
-    let data: Awaited<ReturnType<typeof login>> | null = null;
-
-    for (const role of roles) {
-      try {
-        data = await login(role, { email, password });
-        break;
-      } catch {
-        // try next role
-      }
-    }
-
-    if (!data) {
-      setLoading(false);
-      setError('Invalid email or password');
-      toast.error('Login failed');
-      return;
-    }
-
     try {
+      const data = await login({ email, password });
+
       const decoded = decodeToken(data.token);
       const userId  = (decoded.userId as string) ?? '';
-      let profile: Profile;
 
-      if (data.role === 'owner') {
-        const ownerProfile: OwnerProfile = {
-          id: userId, fullname: null, email, phoneNumber: '',
-          address: { country: null, city: null, street: null, zipCode: null },
-          pets: [], type: 'owner',
-        };
-        profile = ownerProfile;
-      } else if (data.role === 'clinic') {
-        const clinicProfile: ClinicProfile = {
-          id: userId, clinicName: null, email, phone: '',
-          address: { country: null, city: null, street: null, state: null, zipCode: null },
-          vets: [], servicesProvided: [], pricing: [], type: 'clinic',
-        };
-        profile = clinicProfile;
-      } else {
-        const vetProfile: VetProfile = {
-          id: userId, fullname: null, email, phone: '', clinicId: '', type: 'vet',
-        };
-        profile = vetProfile;
-      }
+      const profile: OwnerProfile = {
+        id: userId,
+        fullname: null,
+        email,
+        phoneNumber: '',
+        address: { country: null, city: null, street: null, zipCode: null },
+        pets: [],
+        type: 'owner',
+      };
 
       setProfile(profile, data.token);
-      localStorage.setItem('role', data.role);
       if (remember) localStorage.setItem('remember', '1');
 
-      toast.success(`Logged in as ${data.role}!`);
-      router.push('/role-gate');
-    } catch (err: unknown) {
-      if (err instanceof Error) setError(err.message);
-      else setError('Login failed');
+      toast.success('Logged in!');
+      router.push('/dashboard');
+    } catch {
+      setError('Invalid email or password');
       toast.error('Login failed');
     } finally {
       setLoading(false);

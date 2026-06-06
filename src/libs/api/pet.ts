@@ -110,3 +110,25 @@ export async function createPet(payload: {
         throw err as AxiosError<ApiErrorResponse>;
     }
 }
+
+/** 
+ * get my pet details
+ */
+
+export interface GetMyPetsResponse {
+  status: string;
+  results: number;
+  data: { pets: Pet[] };
+}
+
+export async function getMyPets(): Promise<GetMyPetsResponse> {
+  try {
+    const { data } = await axios.get<GetMyPetsResponse>(
+      `${BASE_URL}/owner/me/pets`,
+      { headers: getAuthHeaders() }
+    );
+    return data;
+  } catch (err) {
+    throw err as AxiosError<ApiErrorResponse>;
+  }
+}

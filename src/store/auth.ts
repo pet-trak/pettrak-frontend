@@ -5,9 +5,9 @@ import { persist } from 'zustand/middleware';
 /* =========================
    Roles
 ========================= */
-export type UserRole = 'owner' | 'clinic' | 'vet' | 'receptionist';
+export type UserRole = 'owner';
 
-/* ---- Pet (Owner only) ---- */
+/* ---- Pet ---- */
 export interface Pet {
   id: string;
   userId?: string;
@@ -43,48 +43,7 @@ export interface OwnerProfile {
   pushNotificationToken?: boolean;
 }
 
-export type PricingItem = {
-  type: string;
-  fee: number;
-};
-
-/* ---- Clinic Profile ---- */
-export interface ClinicProfile {
-  id: string;
-  clinicName: string | null;
-  email: string | null;
-  phone?: string;
-  address?: Address;
-  vets?: VetProfile[];
-  type: 'clinic';
-
-  // clinic
-  servicesProvided: string[];
-  pricing: PricingItem[];
-}
-
-/* ---- Vet Profile ---- */
-export interface VetProfile {
-  id: string;
-  fullname: string | null;
-  email: string | null;
-  phone?: string;
-  clinicId?: string;
-  type: 'vet';
-}
-
-/* ---- Receptionist Profile ---- */
-export interface ReceptionistProfile {
-  id: string;
-  fullname: string | null;
-  email: string | null;
-  phone?: string;
-  clinicId?: string;
-  type: 'receptionist';
-}
-
-/* ---- Union Profile ---- */
-export type Profile = OwnerProfile | ClinicProfile | VetProfile | ReceptionistProfile;
+export type Profile = OwnerProfile;
 
 /* =========================
    STORE
@@ -115,7 +74,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'auth-storage', // key in localStorage
+      name: 'auth-storage',
       partialize: (state) => ({
         profile: state.profile,
         token: state.token,

@@ -60,19 +60,13 @@ export default function NavDashboard() {
     const petCount     = ownerProfile?.pets?.length ?? 0;
 
     return (
-        <nav className="sticky top-0 z-30 bg-white border-b border-gray-100 shadow-sm">
+        <nav className="sticky top-0 z-30 bg-pry-clr border-b border-gray-100 shadow-sm">
             <div className="max-w-[1220px] mx-auto px-4 md:px-6 h-16 flex items-center justify-between gap-4">
-
-                {/* Search Bar */}
-                <div className="flex-1 max-w-md relative">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
-                    <input
-                        type="search"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search pets, records..."
-                        className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-acc-clr focus:bg-white transition-all duration-150 sec-ff"
-                    />
+                {/* Logo */}
+                <div className="flex items-center gap-2">
+                    <Link href="/dashboard" className="text-white font-bold text-lg sec-ff">
+                        <Image src="/petark_logo.png" alt="PetTrak" width={40} height={40} className="rounded-full object-cover" />
+                    </Link>
                 </div>
 
                 {/* Right actions */}
@@ -96,12 +90,12 @@ export default function NavDashboard() {
                                 className="flex items-center gap-2.5 pl-1 pr-3 py-1.5 rounded-xl hover:bg-gray-100 transition-colors duration-150 group"
                             >
                                 {/* Pet avatars or fallback */}
-                                <div className="flex -space-x-2 flex-shrink-0">
+                                <div className="flex -space-x-2 shrink-0">
                                     {petCount > 0
                                         ? ownerProfile.pets?.slice(0, 3).map((pet: Pet, i: number) => (
                                             <div
                                                 key={pet.id}
-                                                className="w-8 h-8 rounded-full border-2 border-white shadow-sm overflow-hidden"
+                                                className="w-8 h-8 rounded-full border-2 border-pry-clr shadow-sm overflow-hidden"
                                                 style={{ zIndex: petCount - i }}
                                             >
                                                 <Image
@@ -114,8 +108,8 @@ export default function NavDashboard() {
                                             </div>
                                         ))
                                         : (
-                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#38E07B] to-[#2bc466] flex items-center justify-center border-2 border-white shadow-sm">
-                                                <User className="w-4 h-4 text-white" />
+                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#38E07B] to-[#2bc466] flex items-center justify-center border-2 border-pry-clr shadow-sm">
+                                                <User className="w-4 h-4 text-pry-clr" />
                                             </div>
                                         )
                                     }
@@ -140,7 +134,7 @@ export default function NavDashboard() {
                             {menuOpen && (
                                 <div
                                     onClick={(e) => e.stopPropagation()}
-                                    className="absolute right-0 mt-2 w-52 bg-white border border-gray-100 rounded-2xl shadow-lg shadow-black/10 overflow-hidden z-50 sec-ff"
+                                    className="absolute right-0 mt-2 w-52 bg-pry-clr border border-gray-100 rounded-2xl shadow-lg shadow-black/10 overflow-hidden z-50 sec-ff"
                                 >
                                     <div className="px-4 py-3 border-b border-gray-50">
                                         <p className="text-xs text-gray-400 pry-ff">Signed in as</p>

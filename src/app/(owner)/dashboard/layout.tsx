@@ -2,8 +2,7 @@
 
 import { ReactNode } from 'react';
 import Sidebar from '@/components/sidebar';
-import { SidebarProvider, useSidebar } from '@/context/sidebar-context';
-import NavDashboard from '@/components/nav-dashboard';
+import { SidebarProvider } from '@/context/sidebar-context';
 import { Toaster } from 'sonner';
 
 interface LayoutProps {
@@ -11,34 +10,23 @@ interface LayoutProps {
 }
 
 function InnerLayout({ children }: Readonly<LayoutProps>) {
-    const { collapsed } = useSidebar();
-
     return (
-        <div className="flex h-screen bg-gray-100">
-            {/* Sidebar for desktop and tablet */}
+        /*
+         * flex-row: sidebar + main sit side-by-side on desktop.
+         * The sidebar is sticky/in-flow so it naturally claims its width —
+         * no padding-left or margin offsets needed on <main>.
+         *
+         * On mobile the sidebar renders nothing (hidden md:flex),
+         * so the fixed top bar (h-14) and bottom nav (h-16) are the only
+         * chrome — handled by pt-14 pb-16 on <main>.
+         */
+        <div className="flex flex-row min-h-screen bg-gray-100">
             <Sidebar />
 
-            {/* Main content area */}
-            <div
-                className={`flex-1 flex flex-col transition-all duration-300 ${collapsed ? 'md:pl-20' : 'md:pl-64'
-                    }`}
-            >
-                {/* Navbar for desktop */}
-                <div className="hidden md:block">
-                    <NavDashboard />
-                </div>
-
-                {/* Mobile Navbar */}
-                <div className="md:hidden sticky top-0 z-50">
-                    <NavDashboard />
-                </div>
-
-                {/* Main content */}
-                <main className="flex-1 overflow-auto pt-0 md:pt-4">
-                    {children}
-                    <Toaster position="top-center" />
-                </main>
-            </div>
+            <main className="flex-1 min-w-0 overflow-auto pt-14 pb-16 md:pt-0 md:pb-0">
+                {children}
+                <Toaster position="top-right" richColors closeButton />
+            </main>
         </div>
     );
 }

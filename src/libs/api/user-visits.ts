@@ -1,6 +1,6 @@
 // src/libs/api/user-visits.ts
 
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 const api_url = process.env.NEXT_PUBLIC_API_URL;
 
@@ -9,7 +9,7 @@ export type UserVisitPet = {
     name: string;
     species: string;
     breed: string;
-    age: number;
+    age: number | string; // API returns string "2" in some records
     gender: string;
     photo?: string;
 };
@@ -29,21 +29,34 @@ export type UserVisit = {
     paymentStatus: 'unpaid' | 'paid';
     createdAt: string;
     completedAt: string | null;
-    appointmentType: string;
+    appointmentType?: string; // optional — missing in some records
     pet: UserVisitPet;
 };
 
-export async function getUserVisits(): Promise<UserVisit[]> {
-    try {
-        const token = localStorage.getItem('token'); // 👈 verify this key matches
-        if (!token) throw new Error('Not authenticated');
+type GetUserVisitsResponse = {
+    status: string;
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    results: number;
+    data: UserVisit[];
+};
 
-        const res = await axios.get(`${api_url}/visit/user`, {
+export async function getUserVisits(): Promise<UserVisit[]> {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Not authenticated');
+
+    try {
+        const res = await axios.get<GetUserVisitsResponse>(`${api_url}/visit/user`, {
             headers: { Authorization: `Bearer ${token}` },
         });
 
-        return res.data.data as UserVisit[];
-    } catch (error: any) {
-        throw error?.response?.data || error;
+        return res.data.data;
+    } catch (error) {
+        if (error instanceof AxiosError) {
+            throw new Error(error.response?.data?.message ?? 'Failed to fetch visits');
+        }
+        throw error;
     }
 }

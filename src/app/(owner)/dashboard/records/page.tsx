@@ -6,10 +6,9 @@ import { useEffect, useState } from "react";
 import { getUserVisits, UserVisit } from "@/libs/api/user-visits";
 import {
     ChevronLeft, ChevronRight, Heart, Search,
-    SlidersHorizontal, Thermometer, Weight, Activity, Zap, X,
+    SlidersHorizontal, Thermometer, Weight, Activity, Zap, X, Loader2
 } from "lucide-react";
 import Image from "next/image";
-import Spinner from "@/components/ui/spinner";
 import { useRouter } from "next/navigation";
 
 const FILTER_TABS = ["All Records", "Completed", "Upcoming", "Verified"];
@@ -41,7 +40,7 @@ function VisitDetailContent({ selectedVisit, onPay }: VisitDetailContentProps) {
 
             {[
                 { label: "Date", value: formatDate(selectedVisit.createdAt) },
-                { label: "Type", value: selectedVisit.appointmentType },
+                { label: "Type", value: selectedVisit.appointmentType ?? '—'  },
                 { label: "Weight", value: `${selectedVisit.vitals.weight} kg` },
                 { label: "Temperature", value: `${selectedVisit.vitals.temp} °C` },
                 { label: "Pulse", value: `${selectedVisit.vitals.pulse} bpm` },
@@ -141,8 +140,8 @@ const filtered = visits
     };
 
     if (loading) return (
-        <div className="flex items-center justify-center min-h-screen text-slate-400 text-sm">
-            <Spinner />
+        <div className="flex items-center justify-center min-h-screen text-sec-clr text-sm">
+            <Loader2 className="animate-spin h-4 w-4" />
         </div>
     );
 
@@ -296,7 +295,9 @@ const filtered = visits
                                 <div className="flex sm:block items-center gap-3">
                                     <div className="flex-1 min-w-0">
                                         <p className="text-[12px] sm:text-[13px] font-semibold text-slate-700">{formatDate(visit.createdAt)}</p>
-                                        <p className="text-[10px] sm:text-[11px] text-slate-400 capitalize mt-0.5">{visit.appointmentType}</p>
+                                        <p className="text-[10px] sm:text-[11px] text-slate-400 capitalize mt-0.5">
+                                            {visit.appointmentType ?? '—'}
+                                        </p>
                                     </div>
                                     <span className={`inline-flex items-center gap-1 sm:mt-1 text-[10px] font-bold capitalize px-2 py-0.5 rounded-full flex-shrink-0 ${
                                         visit.status === "completed" ? "bg-emerald-50 text-emerald-600" :

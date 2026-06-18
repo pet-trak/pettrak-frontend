@@ -1,3 +1,5 @@
+// src/app/(owner)/dashboard/nearby-clinic/filter-clinic.tsx
+
 'use client';
 
 import { useState, useEffect } from 'react';

@@ -1,3 +1,5 @@
+// src/libs/api/user.ts
+
 import { AxiosError } from "axios";
 import api from "./axiosInstance";
 import type { OwnerProfile, Pet, Address } from "@/store/auth";
@@ -10,6 +12,7 @@ type RawUser = {
   email: string | null;
   phoneNumber?: string | null;
   role?: string;
+  address?: Address | null;
   pets?: RawPet[] | null;
 };
 
@@ -20,12 +23,20 @@ function mapPet(raw: RawPet): Pet {
   return { id: _id, ...rest };
 }
 
+// Collapses `string | null | undefined` → `string` (or `string | undefined`).
+// `?? ""` alone doesn't satisfy TS because null stays in the inferred union;
+// the explicit `|| undefined` / `|| ""` forces the type to narrow fully.
+function str(v: string | null | undefined, fallback: string): string {
+  return v ?? fallback;
+}
+
 function mapUser(user: RawUser): OwnerProfile {
   return {
     id: user.id,
-    fullname: user.fullname ?? "",
-    email: user.email ?? "",
-    phoneNumber: user.phoneNumber ?? "",
+    fullname: str(user.fullname, ""),
+    email: str(user.email, ""),
+    phoneNumber: str(user.phoneNumber, "") || undefined, // keep optional; empty → undefined
+    address: user.address ?? undefined,
     pets: (user.pets ?? []).map(mapPet),
     type: "owner",
   };

@@ -40,7 +40,7 @@ function VisitDetailContent({ selectedVisit, onPay }: VisitDetailContentProps) {
 
             {[
                 { label: "Date", value: formatDate(selectedVisit.createdAt) },
-                { label: "Type", value: selectedVisit.appointmentType ?? '—'  },
+                { label: "Type", value: selectedVisit.appointmentType ?? '—' },
                 { label: "Weight", value: `${selectedVisit.vitals.weight} kg` },
                 { label: "Temperature", value: `${selectedVisit.vitals.temp} °C` },
                 { label: "Pulse", value: `${selectedVisit.vitals.pulse} bpm` },
@@ -102,30 +102,31 @@ export default function RecordsPage() {
             .finally(() => setLoading(false));
     }, []);
 
-    const latest = visits[0] ?? null;
+    // Derives from selectedVisit so vitals update on row click
+    const latest = selectedVisit ?? visits[0] ?? null;
 
-const filtered = visits
-    .filter((v) => {
-        if (activeFilter === "Completed") return v.status === "completed";
-        if (activeFilter === "Upcoming") return v.status === "in-progress";
-        return true;
-    })
-    .filter((v) => {
-        const now = new Date();
-        if (sortOrder === "last-week") {
-            const weekAgo = new Date(now); weekAgo.setDate(now.getDate() - 7);
-            return new Date(v.createdAt) >= weekAgo;
-        }
-        if (sortOrder === "last-month") {
-            const monthAgo = new Date(now); monthAgo.setMonth(now.getMonth() - 1);
-            return new Date(v.createdAt) >= monthAgo;
-        }
-        return true;
-    })
-    .sort((a, b) => {
-        if (sortOrder === "oldest") return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(); // newest, last-week, last-month all sort newest first
-    });
+    const filtered = visits
+        .filter((v) => {
+            if (activeFilter === "Completed") return v.status === "completed";
+            if (activeFilter === "Upcoming") return v.status === "in-progress";
+            return true;
+        })
+        .filter((v) => {
+            const now = new Date();
+            if (sortOrder === "last-week") {
+                const weekAgo = new Date(now); weekAgo.setDate(now.getDate() - 7);
+                return new Date(v.createdAt) >= weekAgo;
+            }
+            if (sortOrder === "last-month") {
+                const monthAgo = new Date(now); monthAgo.setMonth(now.getMonth() - 1);
+                return new Date(v.createdAt) >= monthAgo;
+            }
+            return true;
+        })
+        .sort((a, b) => {
+            if (sortOrder === "oldest") return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
 
     const totalPages = Math.ceil(filtered.length / PER_PAGE);
     const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
@@ -237,41 +238,41 @@ const filtered = visits
                                     ))}
                                 </div>
                                 <div className="relative flex-shrink-0">
-    <button
-        onClick={() => setShowSortMenu(s => !s)}
-        className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-50 border border-slate-100 px-2 sm:px-2.5 py-2 rounded-xl hover:bg-slate-100 transition-colors"
-    >
-        <SlidersHorizontal size={12} />
-        <span className="hidden sm:inline capitalize">
-            {sortOrder === "newest" ? "Newest First" :
-             sortOrder === "oldest" ? "Oldest First" :
-             sortOrder === "last-week" ? "Last Week" : "Last Month"}
-        </span>
-    </button>
+                                    <button
+                                        onClick={() => setShowSortMenu(s => !s)}
+                                        className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-50 border border-slate-100 px-2 sm:px-2.5 py-2 rounded-xl hover:bg-slate-100 transition-colors"
+                                    >
+                                        <SlidersHorizontal size={12} />
+                                        <span className="hidden sm:inline capitalize">
+                                            {sortOrder === "newest" ? "Newest First" :
+                                             sortOrder === "oldest" ? "Oldest First" :
+                                             sortOrder === "last-week" ? "Last Week" : "Last Month"}
+                                        </span>
+                                    </button>
 
-    {showSortMenu && (
-        <>
-            <div className="fixed inset-0 z-10" onClick={() => setShowSortMenu(false)} />
-            <div className="absolute right-0 top-9 z-[100] bg-white border border-slate-100 rounded-xl shadow-lg w-36 py-1 overflow-hidden">
-                {([
-                    { value: "newest", label: "Newest First" },
-                    { value: "last-week", label: "Last Week" },
-                    { value: "last-month", label: "Last Month" },
-                    { value: "oldest", label: "Oldest First" },
-                ] as const).map(({ value, label }) => (
-                    <button
-                        key={value}
-                        onClick={() => { setSortOrder(value); setShowSortMenu(false); setPage(1); }}
-                        className={`w-full text-left px-3 py-2 text-[12px] font-semibold transition-colors sec-ff
-                            ${sortOrder === value ? "text-emerald-600 bg-emerald-50" : "text-slate-600 hover:bg-slate-50"}`}
-                    >
-                        {label}
-                    </button>
-                ))}
-            </div>
-        </>
-    )}
-</div>
+                                    {showSortMenu && (
+                                        <>
+                                            <div className="fixed inset-0 z-10" onClick={() => setShowSortMenu(false)} />
+                                            <div className="absolute right-0 top-9 z-[100] bg-white border border-slate-100 rounded-xl shadow-lg w-36 py-1 overflow-hidden">
+                                                {([
+                                                    { value: "newest", label: "Newest First" },
+                                                    { value: "last-week", label: "Last Week" },
+                                                    { value: "last-month", label: "Last Month" },
+                                                    { value: "oldest", label: "Oldest First" },
+                                                ] as const).map(({ value, label }) => (
+                                                    <button
+                                                        key={value}
+                                                        onClick={() => { setSortOrder(value); setShowSortMenu(false); setPage(1); }}
+                                                        className={`w-full text-left px-3 py-2 text-[12px] font-semibold transition-colors sec-ff
+                                                            ${sortOrder === value ? "text-emerald-600 bg-emerald-50" : "text-slate-600 hover:bg-slate-50"}`}
+                                                    >
+                                                        {label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
@@ -291,7 +292,7 @@ const filtered = visits
                                     selectedVisit?._id === visit._id ? "bg-emerald-50/50" : ""
                                 } flex flex-col gap-2 px-3 py-3 sm:grid sm:grid-cols-[160px_1fr_1fr] lg:grid-cols-[200px_1fr_1fr] sm:gap-4 sm:px-6 sm:py-4`}>
 
-                                {/* Date + status (mobile: side-by-side) */}
+                                {/* Date + status */}
                                 <div className="flex sm:block items-center gap-3">
                                     <div className="flex-1 min-w-0">
                                         <p className="text-[12px] sm:text-[13px] font-semibold text-slate-700">{formatDate(visit.createdAt)}</p>
@@ -395,7 +396,6 @@ const filtered = visits
                         onClick={() => setShowDetail(false)}
                     />
                     <div className="relative bg-white rounded-t-3xl px-4 sm:px-5 pt-6 pb-8 max-h-[88vh] overflow-auto shadow-2xl">
-                        {/* Drag handle */}
                         <div className="w-10 h-1 rounded-full bg-slate-200 mx-auto absolute left-1/2 -translate-x-1/2 top-3" />
 
                         <div className="flex items-center justify-between mb-4">
@@ -408,20 +408,20 @@ const filtered = visits
                         </div>
 
                         {/* Pet summary strip */}
-                        {latest?.pet && (
+                        {selectedVisit.pet && (
                             <div className="flex items-center gap-3 mb-4 p-3 bg-slate-50 rounded-2xl">
                                 <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-emerald-100 bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center flex-shrink-0">
-                                    {latest.pet.photo
-                                        ? <Image src={latest.pet.photo} alt={latest.pet.name} width={40} height={40} className="w-full h-full object-cover" />
+                                    {selectedVisit.pet.photo
+                                        ? <Image src={selectedVisit.pet.photo} alt={selectedVisit.pet.name} width={40} height={40} className="w-full h-full object-cover" />
                                         : <Heart size={16} className="text-amber-400" />}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-[13px] font-black text-slate-800 truncate">{latest.pet.name}</p>
-                                    <p className="text-[11px] text-slate-400">{latest.pet.breed} • {latest.pet.age} yrs</p>
+                                    <p className="text-[13px] font-black text-slate-800 truncate">{selectedVisit.pet.name}</p>
+                                    <p className="text-[11px] text-slate-400">{selectedVisit.pet.breed} • {selectedVisit.pet.age} yrs</p>
                                 </div>
                                 <div className="flex gap-1.5 flex-shrink-0">
-                                    <span className="px-2 py-0.5 rounded-full bg-slate-200 text-[9px] font-black text-slate-600 uppercase">{latest.pet.gender}</span>
-                                    <span className="px-2 py-0.5 rounded-full bg-slate-200 text-[9px] font-black text-slate-600 uppercase">{latest.pet.species}</span>
+                                    <span className="px-2 py-0.5 rounded-full bg-slate-200 text-[9px] font-black text-slate-600 uppercase">{selectedVisit.pet.gender}</span>
+                                    <span className="px-2 py-0.5 rounded-full bg-slate-200 text-[9px] font-black text-slate-600 uppercase">{selectedVisit.pet.species}</span>
                                 </div>
                             </div>
                         )}

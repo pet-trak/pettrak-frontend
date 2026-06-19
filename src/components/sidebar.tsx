@@ -39,8 +39,7 @@ function useOwnerProfile() {
     const fetchedRef = useRef(false);
 
     useEffect(() => {
-        if (profile) return;
-        if (fetchedRef.current) return;
+        if (fetchedRef.current) return; // guard against StrictMode double-fire only
 
         const token = localStorage.getItem('token');
         if (!token) return;
@@ -49,18 +48,15 @@ function useOwnerProfile() {
 
         getUserProfile()
             .then((ownerProfile) => {
-                // getUserProfile() already returns a fully typed OwnerProfile —
-                // no need to reconstruct it here.
                 setProfile(ownerProfile, token);
             })
             .catch((err: unknown) => {
-                fetchedRef.current = false; // allow retry on next mount
+                fetchedRef.current = false;
                 toast.error(err instanceof Error ? err.message : 'Failed to load profile');
                 logout();
             });
-    }, [profile, setProfile, logout]);
+    }, [setProfile, logout]); // removed `profile` from deps
 
-    // Derive loading: token present but profile not yet hydrated
     const hasToken =
         typeof window !== 'undefined' && !!localStorage.getItem('token');
     const loading = hasToken && !profile;
@@ -109,30 +105,43 @@ function ProfileDropdown({ ownerProfile, align = 'right', collapsed = false }: P
                 `}
             >
                 {/* Pet avatars / fallback */}
-                <div className="flex -space-x-2 shrink-0">
-                    {petCount > 0
-                        ? ownerProfile.pets?.slice(0, 3).map((pet: Pet, i: number) => (
-                            <div
-                                key={pet.id}
-                                className="w-8 h-8 rounded-full border-2 border-white shadow-sm overflow-hidden"
-                                style={{ zIndex: petCount - i }}
-                            >
-                                <Image
-                                    src={pet.photo ?? '/default-pet.png'}
-                                    alt={pet.name ?? 'Pet'}
-                                    width={32}
-                                    height={32}
-                                    className="w-full h-full object-cover"
-                                />
-                            </div>
-                        ))
-                        : (
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#38E07B] to-[#2bc466] flex items-center justify-center border-2 border-white shadow-sm">
-                                <User className="w-4 h-4 text-white" />
-                            </div>
-                        )
-                    }
-                </div>
+ {/* Pet avatars / fallback */}
+<div className="flex items-center shrink-0">
+    {petCount === 0 && (
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#38E07B] to-[#2bc466] flex items-center justify-center border-2 border-white shadow-sm">
+            <User className="w-4 h-4 text-white" />
+        </div>
+    )}
+
+    {petCount === 1 && (
+        <div className="w-8 h-8 rounded-full border-2 border-white shadow-sm overflow-hidden">
+            <Image
+                src={ownerProfile.pets![0].photo ?? '/default-pet.png'}
+                alt={ownerProfile.pets![0].name ?? 'Pet'}
+                width={32}
+                height={32}
+                className="w-full h-full object-cover"
+            />
+        </div>
+    )}
+
+    {petCount > 1 && (
+        <div className="flex items-center gap-1.5">
+            <div className="w-8 h-8 rounded-full border-2 border-white shadow-sm overflow-hidden">
+                <Image
+                    src={ownerProfile.pets![0].photo ?? '/default-pet.png'}
+                    alt={ownerProfile.pets![0].name ?? 'Pet'}
+                    width={32}
+                    height={32}
+                    className="w-full h-full object-cover"
+                />
+            </div>
+            <span className="text-xs font-semibold text-gray-500">
+                +{petCount - 1}
+            </span>
+        </div>
+    )}
+</div>
 
                 {!collapsed && (
                     <>

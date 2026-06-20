@@ -173,7 +173,7 @@ export default function RecordsPage() {
                         </h1>
                     </div>
                     <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 w-32 sm:w-52">
-                        <Search size={13} className="text-slate-400 flex-shrink-0" />
+                        <Search size={13} className="text-slate-400 shrink-0" />
                         <input
                             className="bg-transparent text-[13px] text-slate-600 placeholder:text-slate-400 outline-none flex-1 min-w-0"
                             placeholder="Search..."

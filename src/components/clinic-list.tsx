@@ -3,7 +3,7 @@
 
 import { ChevronDown, ChevronRight, MapPin, Star, Stethoscope, Loader2 } from 'lucide-react';
 import FilterClinic from '@/app/(owner)/dashboard/nearby-clinic/filter-clinic';
-import { Clinic } from '@/libs/api/nearbyClinic';
+import { Clinic, Service } from '@/libs/api/nearbyClinic';
 
 interface ClinicListProps {
     clinics: Clinic[];
@@ -17,8 +17,10 @@ interface ClinicListProps {
     mobileHidden?: boolean;
 }
 
-function formatServiceLabel(service: string): string {
-    return service
+function formatServiceLabel(service: Service | string): string {
+    // Get the service name whether it's an object or string
+    const serviceName = typeof service === 'string' ? service : service.name;
+    return serviceName
         .replace(/([A-Z])/g, ' $1')
         .replace(/^./, (s) => s.toUpperCase())
         .trim();
@@ -132,14 +134,14 @@ export default function ClinicList({
                                         </p>
                                     </div>
 
-                                    {/* Service tags */}
+                                    {/* Service tags - updated for Service objects */}
                                     <div className="flex flex-wrap gap-1 mt-1.5">
-                                        {services.slice(0, 3).map((s, i) => (
+                                        {services.slice(0, 3).map((service, i) => (
                                             <span
                                                 key={i}
                                                 className="text-[10px] font-semibold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full uppercase tracking-wide"
                                             >
-                                                {formatServiceLabel(s)}
+                                                {formatServiceLabel(service)}
                                             </span>
                                         ))}
                                         {services.length > 3 && (

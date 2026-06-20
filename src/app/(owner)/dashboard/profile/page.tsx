@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useAuthStore, OwnerProfile } from "@/store/auth";
 import { updateProfile } from "@/libs/api/user";
 import { toast } from "sonner";
-import Image from "next/image";
-import { ImageIcon, Trash, User } from "lucide-react";
+// import Image from "next/image";
+// import { ImageIcon, Trash, User } from "lucide-react";
 import PetsPanel from "@/components/pet-panel";
 
 type FormState = {

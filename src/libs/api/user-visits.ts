@@ -6,6 +6,8 @@ const api_url = process.env.NEXT_PUBLIC_API_URL;
 
 export type UserVisitPet = {
     _id: string;
+    petId: string;       // ← add
+    userId: string;
     name: string;
     species: string;
     breed: string;

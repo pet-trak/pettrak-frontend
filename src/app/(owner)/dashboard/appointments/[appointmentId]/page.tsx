@@ -45,6 +45,8 @@ export default function AppointmentDetails() {
         return { gradient: 'from-amber-400 to-orange-500', light: 'bg-amber-50 text-amber-700 border-amber-200', icon: <AlertCircle className="w-4 h-4" />, label: 'Pending' };
       case 'cancelled':
         return { gradient: 'from-red-400 to-rose-500', light: 'bg-red-50 text-red-700 border-red-200', icon: <XCircle className="w-4 h-4" />, label: 'Cancelled' };
+      case 'missed': 
+        return { gradient: 'from-gray-400 to-slate-500', light: 'bg-gray-50 text-gray-700 border-gray-200', icon: <AlertCircle className="w-4 h-4" />, label: 'Missed' };
       default:
         return { gradient: 'from-gray-400 to-slate-500', light: 'bg-gray-50 text-gray-700 border-gray-200', icon: <Clock className="w-4 h-4" />, label: status };
     }

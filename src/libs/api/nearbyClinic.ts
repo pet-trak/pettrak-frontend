@@ -12,6 +12,12 @@ export interface Address {
   zipCode?: string;
 }
 
+export interface Service {
+  _id: string;
+  name: string;
+  price: number;
+}
+
 export interface Clinic {
   _id: string;
   clinicName: string;
@@ -20,7 +26,13 @@ export interface Clinic {
   daysOpen: string[];
   startingTime: string;
   closingTime: string;
-  servicesProvided: string[];
+  servicesProvided: Service[]; // Now objects instead of strings
+  animalsHandled?: string[];
+  status?: string;
+  pricing?: {
+    type: string;
+    fee: number;
+  }[];
 }
 
 /* ================= RAW API SHAPES ================= */
@@ -41,8 +53,14 @@ interface RawClinic {
   daysOpen?: string[];
   startingTime: string;
   closingTime: string;
-  servicesProvided?: string[];
+  servicesProvided?: Service[] | string[]; // Can be objects or strings
+  animalsHandled?: string[];
+  pricing?: {
+    type: string;
+    fee: number;
+  }[];
   clinicProfile?: RawClinicProfile;
+  status?: string;
 }
 
 interface FetchClinicsResponse {
@@ -67,10 +85,46 @@ function getToken(): string | null {
   return localStorage.getItem('token');
 }
 
-function mergeServices(c: RawClinic): string[] {
-  const rootServices = c.servicesProvided ?? [];
-  const profileServices = c.clinicProfile?.servicesProvided ?? [];
-  return Array.from(new Set([...rootServices, ...profileServices]));
+function mergeServices(c: RawClinic): Service[] {
+  // Get services from root
+  let rootServices: Service[] = [];
+  if (c.servicesProvided) {
+    if (Array.isArray(c.servicesProvided) && c.servicesProvided.length > 0) {
+      // Check if it's an array of strings or objects
+      if (typeof c.servicesProvided[0] === 'string') {
+        // Convert strings to Service objects
+        rootServices = (c.servicesProvided as string[]).map(name => ({
+          _id: name,
+          name: name.charAt(0).toUpperCase() + name.slice(1),
+          price: 0 // Default price if not found
+        }));
+      } else {
+        // Already Service objects
+        rootServices = c.servicesProvided as Service[];
+      }
+    }
+  }
+
+  // Get services from profile (might be strings)
+  let profileServices: Service[] = [];
+  const profileServiceStrings = c.clinicProfile?.servicesProvided ?? [];
+  if (profileServiceStrings.length > 0) {
+    profileServices = profileServiceStrings.map(name => ({
+      _id: name,
+      name: name.charAt(0).toUpperCase() + name.slice(1),
+      price: 0 // Default price if not found
+    }));
+  }
+
+  // Merge and deduplicate by _id
+  const mergedMap = new Map<string, Service>();
+  [...rootServices, ...profileServices].forEach(service => {
+    if (!mergedMap.has(service._id)) {
+      mergedMap.set(service._id, service);
+    }
+  });
+
+  return Array.from(mergedMap.values());
 }
 
 function mapRawClinic(c: RawClinic): Clinic {
@@ -83,6 +137,9 @@ function mapRawClinic(c: RawClinic): Clinic {
     startingTime: c.startingTime,
     closingTime: c.closingTime,
     servicesProvided: mergeServices(c),
+    animalsHandled: c.animalsHandled ?? [],
+    status: c.status ?? 'active',
+    pricing: c.pricing ?? [],
   };
 }
 

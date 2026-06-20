@@ -7,7 +7,7 @@ import {
     Calendar, ChevronLeft, ChevronRight, Clock, Info,
     Phone, Stethoscope, ArrowLeft, ChevronDown, Loader2
 } from 'lucide-react';
-import { Clinic } from '@/libs/api/nearbyClinic';
+import { Clinic, Service } from '@/libs/api/nearbyClinic';
 import { ClinicScheduleDay } from '@/libs/api/appointment';
 import { Pet } from '@/libs/api/user';
 
@@ -19,8 +19,10 @@ function to12Hour(time24: string): string {
     return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
 }
 
-function formatServiceLabel(service: string): string {
-    return service
+function formatServiceLabel(service: Service | string): string {
+    // Get the service name whether it's an object or string
+    const serviceName = typeof service === 'string' ? service : service.name;
+    return serviceName
         .replace(/([A-Z])/g, ' $1')
         .replace(/^./, (s) => s.toUpperCase())
         .trim();
@@ -206,22 +208,33 @@ export default function BookingPanel({
                         </div>
                     )}
 
-                    {/* Services */}
+                    {/* Services - updated to handle Service objects */}
                     {services.length > 0 && (
                         <div>
                             <h3 className="text-xs lg:text-sm font-bold text-sec-clr sec-ff mb-2 uppercase tracking-wide lg:normal-case lg:tracking-normal">
                                 Services Offered
                             </h3>
                             <div className="flex flex-wrap gap-1.5">
-                                {services.map((s, i) => (
-                                    <span
-                                        key={i}
-                                        className="text-[10px] lg:text-[11px] font-semibold bg-green-50 text-green-700 border border-green-100 px-2 lg:px-2.5 py-0.5 lg:py-1 rounded-full flex items-center gap-1 sec-ff"
-                                    >
-                                        <Stethoscope className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
-                                        {formatServiceLabel(s)}
-                                    </span>
-                                ))}
+                                {services.map((service, i) => {
+                                    // Get service name and price whether it's an object or string
+                                    const serviceName = typeof service === 'string' ? service : service.name;
+                                    const servicePrice = typeof service === 'object' && service.price ? service.price : null;
+                                    
+                                    return (
+                                        <span
+                                            key={i}
+                                            className="text-[10px] lg:text-[11px] font-semibold bg-green-50 text-green-700 border border-green-100 px-2 lg:px-2.5 py-0.5 lg:py-1 rounded-full flex items-center gap-1 sec-ff"
+                                        >
+                                            <Stethoscope className="w-2.5 h-2.5 lg:w-3 lg:h-3" />
+                                            {formatServiceLabel(service)}
+                                            {servicePrice !== null && (
+                                                <span className="text-[9px] lg:text-[10px] text-green-600 ml-0.5">
+                                                    ₦{servicePrice.toLocaleString()}
+                                                </span>
+                                            )}
+                                        </span>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
@@ -419,7 +432,6 @@ export default function BookingPanel({
                             </div>
                             <div className="min-w-0">
                                 <p className="text-[9px] lg:text-[10px] font-semibold text-acc-clr uppercase tracking-wide sec-ff">
-                                    {/* Match screenshot labels */}
                                     Lead Vet
                                 </p>
                                 <p className="text-xs lg:text-sm font-bold text-sec-clr sec-ff truncate">

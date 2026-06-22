@@ -26,13 +26,32 @@ export interface Clinic {
   daysOpen: string[];
   startingTime: string;
   closingTime: string;
-  servicesProvided: Service[]; // Now objects instead of strings
+  servicesProvided: Service[];
   animalsHandled?: string[];
   status?: string;
   pricing?: {
     type: string;
     fee: number;
   }[];
+  rating?: {
+    average: number;
+    count: number;
+  };
+}
+
+export interface SearchClinicsParams {
+  search?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  services?: string;   // comma-separated service keys
+  animals?: string;    // comma-separated animal types
+}
+
+export interface SearchClinicsResult {
+  clinics: Clinic[];
+  notFoundLocally: boolean;
 }
 
 /* ================= RAW API SHAPES ================= */
@@ -53,29 +72,30 @@ interface RawClinic {
   daysOpen?: string[];
   startingTime: string;
   closingTime: string;
-  servicesProvided?: Service[] | string[]; // Can be objects or strings
+  servicesProvided?: Service[] | string[];
   animalsHandled?: string[];
-  pricing?: {
-    type: string;
-    fee: number;
-  }[];
+  pricing?: { type: string; fee: number }[];
   clinicProfile?: RawClinicProfile;
   status?: string;
+  rating?: { average: number; count: number };
 }
 
 interface FetchClinicsResponse {
   status: string;
   results: number;
-  data: {
-    clinics: RawClinic[];
-  };
+  data: { clinics: RawClinic[] };
 }
 
 interface FetchClinicByIdResponse {
   status: string;
-  data: {
-    clinic: RawClinic;
-  };
+  data: { clinic: RawClinic };
+}
+
+interface SearchClinicsResponse {
+  status: string;
+  results: number;
+  notFoundLocally: boolean;
+  data: { clinics: RawClinic[] };
 }
 
 /* ================= HELPERS ================= */
@@ -86,42 +106,29 @@ function getToken(): string | null {
 }
 
 function mergeServices(c: RawClinic): Service[] {
-  // Get services from root
   let rootServices: Service[] = [];
-  if (c.servicesProvided) {
-    if (Array.isArray(c.servicesProvided) && c.servicesProvided.length > 0) {
-      // Check if it's an array of strings or objects
-      if (typeof c.servicesProvided[0] === 'string') {
-        // Convert strings to Service objects
-        rootServices = (c.servicesProvided as string[]).map(name => ({
-          _id: name,
-          name: name.charAt(0).toUpperCase() + name.slice(1),
-          price: 0 // Default price if not found
-        }));
-      } else {
-        // Already Service objects
-        rootServices = c.servicesProvided as Service[];
-      }
+
+  if (Array.isArray(c.servicesProvided) && c.servicesProvided.length > 0) {
+    if (typeof c.servicesProvided[0] === 'string') {
+      rootServices = (c.servicesProvided as string[]).map(name => ({
+        _id: name,
+        name: name.charAt(0).toUpperCase() + name.slice(1),
+        price: 0,
+      }));
+    } else {
+      rootServices = c.servicesProvided as Service[];
     }
   }
 
-  // Get services from profile (might be strings)
-  let profileServices: Service[] = [];
-  const profileServiceStrings = c.clinicProfile?.servicesProvided ?? [];
-  if (profileServiceStrings.length > 0) {
-    profileServices = profileServiceStrings.map(name => ({
-      _id: name,
-      name: name.charAt(0).toUpperCase() + name.slice(1),
-      price: 0 // Default price if not found
-    }));
-  }
+  const profileServices: Service[] = (c.clinicProfile?.servicesProvided ?? []).map(name => ({
+    _id: name,
+    name: name.charAt(0).toUpperCase() + name.slice(1),
+    price: 0,
+  }));
 
-  // Merge and deduplicate by _id
   const mergedMap = new Map<string, Service>();
-  [...rootServices, ...profileServices].forEach(service => {
-    if (!mergedMap.has(service._id)) {
-      mergedMap.set(service._id, service);
-    }
+  [...rootServices, ...profileServices].forEach(s => {
+    if (!mergedMap.has(s._id)) mergedMap.set(s._id, s);
   });
 
   return Array.from(mergedMap.values());
@@ -140,6 +147,7 @@ function mapRawClinic(c: RawClinic): Clinic {
     animalsHandled: c.animalsHandled ?? [],
     status: c.status ?? 'active',
     pricing: c.pricing ?? [],
+    rating: c.rating,
   };
 }
 
@@ -154,11 +162,32 @@ export async function fetchClinics(): Promise<Clinic[]> {
     { headers: { Authorization: `Bearer ${token}` } }
   );
 
-  const clinics = response.data?.data?.clinics ?? [];
-  return clinics.map(mapRawClinic);
+  return (response.data?.data?.clinics ?? []).map(mapRawClinic);
 }
 
-/* ================= SINGLE CLINIC ================= */
+export async function searchClinics(params: SearchClinicsParams): Promise<SearchClinicsResult> {
+  const token = getToken();
+  if (!token) throw new Error('Authentication required');
+
+  const query = new URLSearchParams();
+  if (params.search)   query.set('search',   params.search);
+  if (params.street)   query.set('street',   params.street);
+  if (params.city)     query.set('city',     params.city);
+  if (params.state)    query.set('state',    params.state);
+  if (params.country)  query.set('country',  params.country);
+  if (params.services) query.set('services', params.services);
+  if (params.animals)  query.set('animals',  params.animals);
+
+  const response = await axios.get<SearchClinicsResponse>(
+    `${process.env.NEXT_PUBLIC_API_URL}/owner/clinics/search?${query.toString()}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+  return {
+    clinics: (response.data?.data?.clinics ?? []).map(mapRawClinic),
+    notFoundLocally: response.data?.notFoundLocally ?? false,
+  };
+}
 
 export async function fetchClinicById(clinicId: string): Promise<Clinic | null> {
   const token = getToken();

@@ -208,7 +208,7 @@ export default function BookingPanel({
                         </div>
                     )}
 
-                    {/* Services - updated to handle Service objects */}
+                    {/* Services */}
                     {services.length > 0 && (
                         <div>
                             <h3 className="text-xs lg:text-sm font-bold text-sec-clr sec-ff mb-2 uppercase tracking-wide lg:normal-case lg:tracking-normal">
@@ -235,6 +235,25 @@ export default function BookingPanel({
                                         </span>
                                     );
                                 })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ── Animals Handled ── */}
+                    {selectedClinic.animalsHandled && selectedClinic.animalsHandled.length > 0 && (
+                        <div>
+                            <h3 className="text-xs lg:text-sm font-bold text-sec-clr sec-ff mb-2 uppercase tracking-wide lg:normal-case lg:tracking-normal">
+                                Animals We Treat
+                            </h3>
+                            <div className="flex flex-wrap gap-1.5">
+                                {selectedClinic.animalsHandled.map((animal, index) => (
+                                    <span
+                                        key={index}
+                                        className="text-[10px] lg:text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-100 px-2 lg:px-2.5 py-0.5 lg:py-1 rounded-full flex items-center gap-1 sec-ff"
+                                    >
+                                        {animal}
+                                    </span>
+                                ))}
                             </div>
                         </div>
                     )}
@@ -405,7 +424,7 @@ export default function BookingPanel({
                     </div>
 
                     {/* ── Clinic info cards ── */}
-                    <div className="grid grid-cols-2 gap-2 lg:gap-3">
+                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 lg:gap-3">
                         <div className="flex items-center gap-2 lg:gap-3 bg-gray-50 rounded-xl lg:rounded-2xl p-3 lg:p-4 border border-gray-100">
                             <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center flex-shrink-0">
                                 <Clock className="w-4 h-4 lg:w-5 lg:h-5 text-(--acc-clr)" />
@@ -442,6 +461,25 @@ export default function BookingPanel({
                                 </p>
                             </div>
                         </div>
+
+                        {/* Animals Handled Card */}
+                        {selectedClinic.animalsHandled && selectedClinic.animalsHandled.length > 0 && (
+                            <div className="flex items-center gap-2 lg:gap-3 bg-gray-50 rounded-xl lg:rounded-2xl p-3 lg:p-4 border border-gray-100 col-span-2 lg:col-span-1">
+                            
+                                <div className="min-w-0">
+                                    <p className="text-[9px] lg:text-[10px] font-semibold text-blue-600 uppercase tracking-wide sec-ff">
+                                        Animals Treated
+                                    </p>
+                                    <p className="text-xs lg:text-sm font-bold text-sec-clr sec-ff truncate">
+                                        {selectedClinic.animalsHandled.slice(0, 3).join(', ')}
+                                        {selectedClinic.animalsHandled.length > 3 ? '...' : ''}
+                                    </p>
+                                    <p className="text-[10px] text-gray-500 pry-ff truncate hidden lg:block">
+                                        {selectedClinic.animalsHandled.length} species available
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* ── Book CTA ── */}

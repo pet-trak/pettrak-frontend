@@ -14,10 +14,10 @@ function GenderIcon({ gender }: Readonly<{ gender?: string }>) {
 
 function PetCard({ pet }: Readonly<{ pet: Pet }>) {
   return (
-    <div className="flex items-stretch gap-0 bg-pry-clr rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden w-full max-w-[300px]">
+    <div className="flex items-stretch gap-0 bg-pry-clr rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden w-full">
 
       {/* Photo — full height left strip */}
-      <div className="relative w-20 shrink-0 bg-gray-100">
+      <div className="relative w-28 sm:w-32 shrink-0 bg-gray-100">
         <Image
           src={pet.photo && pet.photo !== '' ? pet.photo : '/default-pet.png'}
           alt={pet.name}
@@ -111,7 +111,7 @@ export default function MyPets() {
   }
 
   return (
-    <div className="flex flex-wrap gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {pets.map((pet) => (
         <PetCard key={pet._id} pet={pet} />
       ))}

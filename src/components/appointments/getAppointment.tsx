@@ -1,4 +1,4 @@
-// src/app/(owner)/dashboard/appointments/getAppointment.tsx
+// src/components/appointments/getAppointment.tsx
 
 'use client';
 
@@ -28,7 +28,7 @@ const STATUS_STYLES: Record<string, { dot: string; badge: string }> = {
   cancelled: { dot: "bg-red-400",    badge: "bg-red-50 text-red-700 border border-red-200" },
 };
 
-export default function UserAppointmentsPage() {
+export default function GetAppointments() {
   const { profile } = useAuthStore();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [filtered, setFiltered]         = useState<Appointment[]>([]);
@@ -76,24 +76,23 @@ export default function UserAppointmentsPage() {
 
   if (!profile || profile.type !== 'owner') {
     return (
-      <main className="p-4 sm:p-6 sec-ff">
-        <div className="flex flex-col items-center py-16 bg-white rounded-2xl border border-gray-100 shadow-sm">
-          <User className="w-12 h-12 text-gray-200 mb-3" />
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden sec-ff">
+        <div className="flex flex-col items-center py-8">
+          <User className="w-10 h-10 text-gray-200 mb-3" />
           <p className="text-gray-400 font-semibold text-sm">Access Restricted</p>
           <p className="text-gray-300 text-xs mt-1 pry-ff">Please login as a pet owner.</p>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="p-4 sm:p-6 max-w-full mx-auto sec-ff">
-
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden sec-ff">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
+      <div className="flex items-center justify-between gap-3 px-4 lg:px-6 py-4 border-b border-gray-100 flex-wrap">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-sec-clr pry-ff">Upcoming Appointments</h1>
-          <p className="text-gray-400 text-sm mt-0.5 sec-ff">Track and manage your pet visits.</p>
+          <h2 className="text-base lg:text-lg font-bold text-sec-clr pry-ff">Upcoming Appointments</h2>
+          <p className="text-gray-400 text-xs mt-0.5 sec-ff">Track and manage your pet visits.</p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
@@ -101,19 +100,19 @@ export default function UserAppointmentsPage() {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(o => !o)}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors sec-ff shadow-sm"
+              className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors sec-ff shadow-sm"
             >
               {activeFilter}
-              <ChevronDown size={14} className={`text-gray-400 transition-transform duration-150 ${dropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown size={12} className={`text-gray-400 transition-transform duration-150 ${dropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-36 bg-white border border-gray-100 rounded-xl shadow-lg z-20 overflow-hidden">
+              <div className="absolute right-0 mt-1 w-32 bg-white border border-gray-100 rounded-lg shadow-lg z-20 overflow-hidden">
                 {FILTERS.map(f => (
                   <button
                     key={f}
                     onClick={() => { setActiveFilter(f); setDropdownOpen(false); }}
-                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors sec-ff
+                    className={`w-full text-left px-3 py-2 text-xs transition-colors sec-ff
                       ${activeFilter === f
                         ? 'font-bold text-acc-clr bg-gray-50'
                         : 'text-gray-600 hover:bg-gray-50'
@@ -128,166 +127,162 @@ export default function UserAppointmentsPage() {
         </div>
       </div>
 
-      {/* Loading */}
-      {loading && (
-        <div className="flex justify-center py-20">
-          <Spinner />
-        </div>
-      )}
-
-      {/* Empty */}
-      {!loading && filtered.length === 0 && (
-        <div className="flex flex-col items-center py-16 bg-white rounded-2xl border border-gray-100 shadow-sm">
-          <Calendar className="w-12 h-12 text-gray-200 mb-3" />
-          <p className="text-gray-400 font-semibold text-sm sec-ff">No appointments for {activeFilter.toLowerCase()}</p>
-          <p className="text-gray-300 text-xs mt-1 pry-ff">Try a different filter or book a new appointment.</p>
-        </div>
-      )}
-
-      {/* Table */}
-      {!loading && filtered.length > 0 && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-
-          {/* Column headers */}
-          <div className="hidden sm:grid grid-cols-[2fr_2fr_1.5fr_1.5fr_auto] gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100">
-            {["Pet", "Notes", "Date & Time", "Status", "Actions"].map(h => (
-              <span key={h} className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide sec-ff">{h}</span>
-            ))}
+      {/* Content */}
+      <div className="p-3 lg:p-4">
+        {/* Loading */}
+        {loading && (
+          <div className="flex justify-center py-8">
+            <Spinner />
           </div>
+        )}
 
-          <div className="divide-y divide-gray-50">
-            {filtered.map(a => {
-              const status     = STATUS_STYLES[a.status] ?? { dot: "bg-gray-300", badge: "bg-gray-50 text-gray-500 border border-gray-200" };
-              const vetLabel   = a.vet?.fullname ?? 'Clinic Approved';
-              const clinicName = a.clinic?.clinicName ?? '—';
+        {/* Empty */}
+        {!loading && filtered.length === 0 && (
+          <div className="flex flex-col items-center py-8">
+            <Calendar className="w-10 h-10 text-gray-200 mb-3" />
+            <p className="text-sm text-gray-400 font-semibold sec-ff">No appointments for {activeFilter.toLowerCase()}</p>
+            <p className="text-xs text-gray-300 mt-1 pry-ff">Try a different filter or book a new appointment.</p>
+          </div>
+        )}
 
-              return (
-                <div key={a._id} className="relative">
+        {/* Table */}
+        {!loading && filtered.length > 0 && (
+          <div className="overflow-hidden">
+            {/* Column headers - hidden on mobile */}
+            <div className="hidden sm:grid grid-cols-[2fr_1.5fr_1.5fr_1.2fr_auto] gap-3 px-3 py-2 bg-gray-50 rounded-lg mb-2">
+              {["Pet", "Date & Time", "Status", "Actions"].map(h => (
+                <span key={h} className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide sec-ff">{h}</span>
+              ))}
+            </div>
 
-                  {/* ── Desktop row ── */}
-                  <div className="hidden sm:grid grid-cols-[2fr_2fr_1.5fr_1.5fr_auto] gap-4 items-center px-5 py-4 hover:bg-gray-50 transition-colors duration-150">
-                    <Link href={`/dashboard/appointments/${a._id}`} className="contents">
+            <div className="space-y-2">
+              {filtered.map(a => {
+                const status = STATUS_STYLES[a.status] ?? { dot: "bg-gray-300", badge: "bg-gray-50 text-gray-500 border border-gray-200" };
+                const vetLabel = a.vet?.fullname ?? 'Clinic Approved';
+                const clinicName = a.clinic?.clinicName ?? '—';
 
-                      {/* Pet */}
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl overflow-hidden bg-green-50 border border-gray-100 shrink-0">
-                          {a.pet?.photo ? (
-                            <Image width={36} height={36} src={a.pet.photo} alt={a.pet?.name ?? 'Pet'} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-lg">🐾</div>
-                          )}
-                        </div>
-                        <span className="text-sm font-semibold text-sec-clr sec-ff truncate">{a.pet?.name ?? '—'}</span>
-                      </div>
+                return (
+                  <div key={a._id} className="relative">
 
-                      {/* Notes */}
-                      <div>
-                        <p className="text-sm font-semibold text-sec-clr sec-ff truncate">{a.notes || '—'}</p>
-                        <p className="text-xs text-gray-400 pry-ff mt-0.5">{vetLabel} · {clinicName}</p>
-                      </div>
-
-{/* Date & Time — desktop */}
-<div>
-  <p className="text-sm font-semibold text-sec-clr sec-ff">{dayjs(a.date).format("DD MMM YYYY")}</p>
-  <p className="text-xs text-gray-400 pry-ff mt-0.5">{dayjs(a.date).format("hh:mm A")}</p>
-</div>
-                      {/* Status */}
-                      <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 rounded-lg sec-ff w-fit ${status.badge}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
-                        {a.status.charAt(0).toUpperCase() + a.status.slice(1)}
-                      </span>
-
-                    </Link>
-
-                    {/* Actions — outside Link */}
-                    <div className="relative">
-                      <button
-                        className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-colors"
-                        onClick={() => setOpenRow(openRow === a._id ? null : a._id)}
-                      >
-                        <MoreVertical className="w-4 h-4 text-gray-500" />
-                      </button>
-
-                      {openRow === a._id && (
-                        <>
-                          <div className="fixed inset-0 z-10" onClick={() => setOpenRow(null)} />
-                          <div className="absolute right-0 top-9 z-20 bg-white border border-gray-100 rounded-xl shadow-lg w-36 py-1">
-                            <button
-                              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors sec-ff"
-                              onClick={() => { setOpenRow(null); toast.error('Delete coming soon!'); }}
-                            >
-                              <Trash2 className="w-4 h-4" /> Delete
-                            </button>
+                    {/* ── Desktop row ── */}
+                    <div className="hidden sm:grid grid-cols-[2fr_1.5fr_1.5fr_1.2fr_auto] gap-3 items-center px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors duration-150 border border-transparent hover:border-gray-100">
+                      <Link href={`/dashboard/appointments/${a._id}`} className="contents">
+                        {/* Pet */}
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg overflow-hidden bg-green-50 border border-gray-100 shrink-0">
+                            {a.pet?.photo ? (
+                              <Image width={32} height={32} src={a.pet.photo} alt={a.pet?.name ?? 'Pet'} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-sm">🐾</div>
+                            )}
                           </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-sec-clr sec-ff truncate">{a.pet?.name ?? '—'}</p>
+                            <p className="text-[10px] text-gray-400 pry-ff truncate">{clinicName}</p>
+                          </div>
+                        </div>
 
-                  {/* ── Mobile card ── */}
-                  <div className="sm:hidden flex items-start gap-3 px-4 py-4 hover:bg-gray-50 transition-colors">
-                    <Link href={`/dashboard/appointments/${a._id}`} className="flex items-start gap-3 flex-1 min-w-0">
-                      {/* Pet photo */}
-                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-green-50 border border-gray-100 shrink-0">
-                        {a.pet?.photo ? (
-                          <Image width={40} height={40} src={a.pet.photo} alt={a.pet?.name ?? 'Pet'} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-lg">🐾</div>
+                        {/* Date & Time */}
+                        <div>
+                          <p className="text-xs font-semibold text-sec-clr sec-ff">{dayjs(a.date).format("DD MMM YYYY")}</p>
+                          <p className="text-[10px] text-gray-400 pry-ff">{dayjs(a.date).format("hh:mm A")}</p>
+                        </div>
+
+                        {/* Status */}
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg sec-ff w-fit ${status.badge}`}>
+                          <span className={`w-1 h-1 rounded-full ${status.dot}`} />
+                          {a.status.charAt(0).toUpperCase() + a.status.slice(1)}
+                        </span>
+                      </Link>
+
+                      {/* Actions */}
+                      <div className="relative">
+                        <button
+                          className="w-7 h-7 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors"
+                          onClick={() => setOpenRow(openRow === a._id ? null : a._id)}
+                        >
+                          <MoreVertical className="w-3.5 h-3.5 text-gray-500" />
+                        </button>
+
+                        {openRow === a._id && (
+                          <>
+                            <div className="fixed inset-0 z-10" onClick={() => setOpenRow(null)} />
+                            <div className="absolute right-0 top-8 z-20 bg-white border border-gray-100 rounded-lg shadow-lg w-32 py-1">
+                              <button
+                                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-red-500 hover:bg-red-50 transition-colors sec-ff"
+                                onClick={() => { setOpenRow(null); toast.error('Delete coming soon!'); }}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" /> Delete
+                              </button>
+                            </div>
+                          </>
                         )}
                       </div>
+                    </div>
 
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-sm font-bold text-sec-clr sec-ff truncate">{a.pet?.name ?? '—'}</p>
-                          <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full sec-ff shrink-0 ${status.badge}`}>
-                            <span className={`w-1 h-1 rounded-full ${status.dot}`} />
-                            {a.status.charAt(0).toUpperCase() + a.status.slice(1)}
-                          </span>
+                    {/* ── Mobile card ── */}
+                    <div className="sm:hidden flex items-start gap-2 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-50">
+                      <Link href={`/dashboard/appointments/${a._id}`} className="flex items-start gap-2 flex-1 min-w-0">
+                        {/* Pet photo */}
+                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-green-50 border border-gray-100 shrink-0">
+                          {a.pet?.photo ? (
+                            <Image width={40} height={40} src={a.pet.photo} alt={a.pet?.name ?? 'Pet'} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-base">🐾</div>
+                          )}
                         </div>
-                        <p className="text-xs text-gray-600 sec-ff mt-0.5 truncate">{a.notes || '—'}</p>
-                        <p className="text-xs text-gray-400 pry-ff">{vetLabel} · {clinicName}</p>
-{/* Date & Time — mobile */}
-<div className="flex items-center gap-1 mt-1.5">
-  <Calendar size={11} className="text-gray-300" />
-  <p className="text-xs text-gray-400 pry-ff">
-    {dayjs(a.date).format("DD MMM YYYY · hh:mm A")}
-  </p>
-</div>
+
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-1">
+                            <p className="text-xs font-bold text-sec-clr sec-ff truncate">{a.pet?.name ?? '—'}</p>
+                            <span className={`inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full sec-ff shrink-0 ${status.badge}`}>
+                              <span className={`w-1 h-1 rounded-full ${status.dot}`} />
+                              {a.status.charAt(0).toUpperCase() + a.status.slice(1)}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-gray-400 pry-ff truncate">{clinicName}</p>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <Calendar size={10} className="text-gray-300" />
+                            <p className="text-[10px] text-gray-400 pry-ff">
+                              {dayjs(a.date).format("DD MMM · hh:mm A")}
+                            </p>
+                          </div>
+                        </div>
+                      </Link>
+
+                      {/* Actions */}
+                      <div className="relative shrink-0">
+                        <button
+                          className="w-7 h-7 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors"
+                          onClick={() => setOpenRow(openRow === a._id ? null : a._id)}
+                        >
+                          <MoreVertical className="w-3.5 h-3.5 text-gray-500" />
+                        </button>
+
+                        {openRow === a._id && (
+                          <>
+                            <div className="fixed inset-0 z-40" onClick={() => setOpenRow(null)} />
+                            <div className="absolute right-0 top-8 z-50 bg-white border border-gray-100 rounded-lg shadow-lg w-32 py-1">
+                              <button
+                                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-red-500 hover:bg-red-50 transition-colors sec-ff"
+                                onClick={() => { setOpenRow(null); toast.error('Delete coming soon!'); }}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" /> Delete
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
-                    </Link>
+                    </div>
 
-{/* Actions — outside Link */}
-<div className="relative">
-  <button
-    className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-colors"
-    onClick={() => setOpenRow(openRow === a._id ? null : a._id)}
-  >
-    <MoreVertical className="w-4 h-4 text-gray-500" />
-  </button>
-
-  {openRow === a._id && (
-    <>
-      <div className="fixed inset-0 z-40" onClick={() => setOpenRow(null)} />
-      <div className="absolute right-0 top-9 z-50 bg-white border border-gray-100 rounded-xl shadow-lg w-36 py-1">
-        <button
-          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors sec-ff"
-          onClick={() => { setOpenRow(null); toast.error('Delete coming soon!'); }}
-        >
-          <Trash2 className="w-4 h-4" /> Delete
-        </button>
-      </div>
-    </>
-  )}
-</div>
                   </div>
-
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
-    </main>
+        )}
+      </div>
+    </div>
   );
 }

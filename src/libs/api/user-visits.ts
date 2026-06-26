@@ -1,20 +1,27 @@
-// src/libs/api/user-visits.ts
-
 import axios, { AxiosError } from 'axios';
 
 const api_url = process.env.NEXT_PUBLIC_API_URL;
 
 export type UserVisitPet = {
     _id: string;
-    petId: string;       // ← add
+    petId: string;
     userId: string;
     name: string;
     species: string;
     breed: string;
-    age: number | string; // API returns string "2" in some records
+    age: number | string;
     gender: string;
     photo?: string;
 };
+
+export interface DischargeSummary {
+    greeting: string;
+    visitSummary: string;
+    diagnosis: string;
+    homeCareinstructions: string[];
+    returnConditions: string[];
+    closing: string;
+}
 
 export type UserVisit = {
     _id: string;
@@ -31,8 +38,11 @@ export type UserVisit = {
     paymentStatus: 'unpaid' | 'paid';
     createdAt: string;
     completedAt: string | null;
-    appointmentType?: string; // optional — missing in some records
+    appointmentType?: string;
     pet: UserVisitPet;
+    dischargeSummary?: DischargeSummary;
+    dischargeSummaryGeneratedAt?: string;
+    soapGeneratedByAI?: boolean;
 };
 
 type GetUserVisitsResponse = {
@@ -53,7 +63,6 @@ export async function getUserVisits(): Promise<UserVisit[]> {
         const res = await axios.get<GetUserVisitsResponse>(`${api_url}/visit/user`, {
             headers: { Authorization: `Bearer ${token}` },
         });
-
         return res.data.data;
     } catch (error) {
         if (error instanceof AxiosError) {

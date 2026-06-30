@@ -8,18 +8,23 @@ import { useAuthStore } from "@/store/auth";
 import { toast } from "sonner";
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import {
-  Calendar, User, MoreVertical, Trash2, ChevronDown,
+  Calendar, User, MoreVertical, Trash2, ChevronDown, ChevronLeft, ChevronRight, Loader2
 } from "lucide-react";
-import Spinner from "@/components/ui/spinner";
 import Link from "next/link";
 import Image from "next/image";
 import type { Appointment } from "@/libs/api/appointment";
 
 dayjs.extend(isoWeek);
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
-const FILTERS = ["Today", "This Week", "This Month"] as const;
+const FILTERS = ["Today", "This Week", "Next 30 Days", "All"] as const;
 type Filter = typeof FILTERS[number];
+
+const PAGE_SIZE = 5;
 
 const STATUS_STYLES: Record<string, { dot: string; badge: string }> = {
   pending:   { dot: "bg-yellow-400", badge: "bg-yellow-50 text-yellow-700 border border-yellow-200" },
@@ -32,10 +37,11 @@ export default function GetAppointments() {
   const { profile } = useAuthStore();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [filtered, setFiltered]         = useState<Appointment[]>([]);
-  const [activeFilter, setActiveFilter] = useState<Filter>("This Month");
+  const [activeFilter, setActiveFilter] = useState<Filter>("All");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [loading, setLoading]           = useState(true);
   const [openRow, setOpenRow]           = useState<string | null>(null);
+  const [page, setPage]                 = useState(1);
   const dropdownRef                     = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -43,7 +49,9 @@ export default function GetAppointments() {
       if (!profile || profile.type !== 'owner') { setLoading(false); return; }
       try {
         const data = await getAppointments();
-        setAppointments(data);
+        // newest-upcoming first; sort by date ascending so "next" appointment is on top
+        const sorted = [...data].sort((a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf());
+        setAppointments(sorted);
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Failed to load appointments");
       } finally {
@@ -55,13 +63,27 @@ export default function GetAppointments() {
 
   useEffect(() => {
     const now = dayjs();
+    let next: Appointment[];
+
     if (activeFilter === "Today") {
-      setFiltered(appointments.filter(a => dayjs(a.date).isSame(now, "day")));
+      next = appointments.filter(a => dayjs(a.date).isSame(now, "day"));
     } else if (activeFilter === "This Week") {
-      setFiltered(appointments.filter(a => dayjs(a.date).isSame(now, "isoWeek")));
+      next = appointments.filter(a =>
+        dayjs(a.date).isSameOrAfter(now, "day") &&
+        dayjs(a.date).isSameOrBefore(now.endOf("isoWeek"))
+      );
+    } else if (activeFilter === "Next 30 Days") {
+      next = appointments.filter(a =>
+        dayjs(a.date).isSameOrAfter(now, "day") &&
+        dayjs(a.date).isSameOrBefore(now.add(30, "day"))
+      );
     } else {
-      setFiltered(appointments.filter(a => dayjs(a.date).isSame(now, "month")));
+      // "All" — no date restriction
+      next = appointments;
     }
+
+    setFiltered(next);
+    setPage(1); // reset to first page whenever filter or data changes
   }, [activeFilter, appointments]);
 
   useEffect(() => {
@@ -85,6 +107,9 @@ export default function GetAppointments() {
       </div>
     );
   }
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden sec-ff">
@@ -132,7 +157,7 @@ export default function GetAppointments() {
         {/* Loading */}
         {loading && (
           <div className="flex justify-center py-8">
-            <Spinner />
+            <Loader2 className="animate-spin text-acc-clr h-6 w-6" />
           </div>
         )}
 
@@ -156,9 +181,8 @@ export default function GetAppointments() {
             </div>
 
             <div className="space-y-2">
-              {filtered.map(a => {
+              {pageItems.map(a => {
                 const status = STATUS_STYLES[a.status] ?? { dot: "bg-gray-300", badge: "bg-gray-50 text-gray-500 border border-gray-200" };
-                const vetLabel = a.vet?.fullname ?? 'Clinic Approved';
                 const clinicName = a.clinic?.clinicName ?? '—';
 
                 return (
@@ -280,6 +304,31 @@ export default function GetAppointments() {
                 );
               })}
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between gap-3 px-1 pt-4 mt-2 border-t border-gray-100">
+                <p className="text-[11px] text-gray-400 sec-ff">
+                  Page {page} of {totalPages} · {filtered.length} appointment{filtered.length !== 1 ? 's' : ''}
+                </p>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                  >
+                    <ChevronLeft size={14} />
+                  </button>
+                  <button
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                  >
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
